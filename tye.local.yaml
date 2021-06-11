@@ -1,0 +1,106 @@
+# tye application configuration file
+# read all about it at https://github.com/dotnet/tye
+#
+# define global settings here
+# name: exampleapp # application name
+# registry: exampleuser # dockerhub username or container registry hostname
+
+# define multiple services here
+name: LeadGenProcessing
+registry: mrober23
+extensions:
+- name: dapr
+  log-level: debug
+  # config allows you to pass additional configuration into the dapr sidecar
+  # config will be interpreted as a named k8s resource when deployed, and will be interpreted as
+  # a file on disk when running locally at `./components/myconfig.yaml`
+  # config: myconfig
+  # components-path configures the components path of the dapr sidecard
+  components-path: "./components/"
+ingress:
+  - name: ingress
+    bindings:
+      - name: httpingress
+        port: 5020
+        protocol: http
+      - name: httpsingress
+        port: 5021
+        protocol: https
+    rules:
+      - path: /validation
+        service: leadgen-validator
+      - path: /process
+        service: leadgen-processor
+      - path: /
+        service: leadgen-reporting
+      - path: /reporting
+        service: leadgen-reporting
+      - path: /client
+        service: leadgen-client
+
+services:
+- name: leadgen-client
+  project: src/LeadGen.Client/LeadGen.Client.csproj
+  replicas: 1
+  env:
+    - name: AppName
+      value: LeadGen-Client
+  env_file:
+    - ./pubsub.env
+    - ./statestore.env
+- name: leadgen-processor
+  project: src/LeadGen.Processor/LeadGen.Processor.csproj
+  replicas: 1
+  env:
+    - name: AppName
+      value: LeadGen-Processor
+  env_file:
+    - ./pubsub.env
+    - ./statestore.env
+- name: leadgen-reporting
+  project: src/LeadGen.Reporting/LeadGen.Reporting.csproj
+  replicas: 1
+  env:
+    - name: AppName
+      value: LeadGen-Reporting
+  env_file:
+    - ./pubsub.env
+    - ./statestore.env
+- name: leadgen-validator
+  project: src/LeadGen.Validator/LeadGen.Validator.csproj
+  replicas: 1
+  env:
+    - name: AppName
+      value: LeadGen-Validator
+  env_file:
+    - ./pubsub.env
+    - ./statestore.env
+- name: leadgen-worker
+  project: src/LeadGen.Workers/LeadGen.Worker.csproj
+  replicas: 1
+  env:
+    - name: AppName
+      value: LeadGen-Worker
+  env_file:
+    - ./pubsub.env
+    - ./statestore.env
+
+# - name: placement
+#   image: daprio/dapr
+#   args: ./placement
+#   bindings:
+#     - port: 50005
+
+# - name: postgres
+#   image:  postgres
+#   env:
+#   - name: POSTGRES_PASSWORD
+#     value: "pass@word1"
+#   bindings:
+#   - port: 5432
+#     connectionString: Server=${host};Port=${port};User Id=postgres;Password=${env:POSTGRES_PASSWORD};
+# - name: redis
+#   image: redis
+#   bindings:
+#     - port: 6379
+#       connectionString: ${host}:${port}
