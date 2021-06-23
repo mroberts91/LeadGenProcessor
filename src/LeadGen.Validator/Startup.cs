@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
+using LeadGen.Core.Events;
+using LeadGen.Core.Store;
 
 namespace LeadGen.Validator
 {
@@ -15,8 +17,8 @@ namespace LeadGen.Validator
         {
             services.AddApplicationInsightsTelemetry();
 
-            services.AddDaprClient();
-
+            services.AddEventBus();
+            services.AddStateStore();
             services.AddControllers();
 
             services.AddSwaggerGen(c =>
@@ -41,18 +43,14 @@ namespace LeadGen.Validator
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "LeadGen.Validator v1"));
 
-            app.UseHttpsRedirection();
-
-            app.UseCloudEvents();
-
             app.UseRouting();
 
             app.UseAuthorization();
 
+            app.UseSubscriptionEvents();
+
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapSubscribeHandler();
-                endpoints.MapControllers();
                 endpoints.MapConfigDebugEndpoint();
 
                 endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions()

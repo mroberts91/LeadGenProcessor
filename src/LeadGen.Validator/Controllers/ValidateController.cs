@@ -1,4 +1,6 @@
-﻿using LeadGen.Core.Exceptions;
+﻿using LeadGen.Core.Events;
+using LeadGen.Core.Events.Leads;
+using LeadGen.Core.Exceptions;
 using LeadGen.Core.Models;
 using LeadGen.Core.Store;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +15,11 @@ namespace LeadGen.Validator.Controllers
     [Route("[controller]")]
     public class ValidateController : ControllerBase
     {
-        private readonly IStateStore _stateStore;
+        private readonly IEventBus _eventBus;
 
-        public ValidateController(IStateStore stateStore)
+        public ValidateController(IEventBus eventBus)
         {
-            _stateStore = stateStore;
+            _eventBus = eventBus;
         }
 
         [HttpPost]
@@ -26,16 +28,21 @@ namespace LeadGen.Validator.Controllers
             return ValidatedLead.Create(lead).Value switch
             {
                 ValidatedLead validatedLead => await ValidatedLeadAsync(validatedLead),
-                InvalidLeadPropertyException<string> ex => BadRequest(new { ex.PropertyName, ex.Message }),
-                ArgumentNullException ex => BadRequest(new { ex.ParamName, ex.Message }),
+                InvalidLeadPropertyException<string> ex => Ok(LeadValidationResult.CreateFailedResult(ex)),
+                ArgumentNullException ex => Ok(LeadValidationResult.CreateFailedResult(ex.Message)),
                 _ => StatusCode((int)HttpStatusCode.InternalServerError)
             };
         }
 
         private async Task<IActionResult> ValidatedLeadAsync(ValidatedLead validatedLead)
         {
-            await _stateStore.SaveValidatedLeadTokenAsync(validatedLead);
-            return Ok(validatedLead);
+            LeadValidated evt = new()
+            {
+                Lead = validatedLead
+            };
+
+            await _eventBus.PublishAsync(evt);
+            return Ok(LeadValidationResult.CreateSuccessResult(validatedLead));
         }
     }
 }

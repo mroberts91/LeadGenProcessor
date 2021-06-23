@@ -7,6 +7,13 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using LeadGen.Processor.HealthChecks;
+using Dapr;
+using Dapr.Client;
+using LeadGen.Core.Endpoints;
+using System.Reflection;
+using LeadGen.Core.Events;
+using LeadGen.Core.Events.Leads;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace LeadGen.Processor
 {
@@ -18,13 +25,11 @@ namespace LeadGen.Processor
         }
 
         public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddApplicationInsightsTelemetry();
 
-            services.AddControllers();
+            services.AddEventBus();
 
             services.AddSwaggerGen(c =>
             {
@@ -42,7 +47,6 @@ namespace LeadGen.Processor
                     tags: new[] { "ready" });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -52,16 +56,14 @@ namespace LeadGen.Processor
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "LeadGen.Processor v1"));
             }
 
-            app.UseHttpsRedirection();
-
             app.UseRouting();
 
             app.UseAuthorization();
 
+            app.UseSubscriptionEvents();
+
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
-
                 endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions()
                 {
                     Predicate = (check) => check.Tags.Contains("ready")

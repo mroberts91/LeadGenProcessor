@@ -6,14 +6,14 @@ using System.Linq;
 
 namespace LeadGen.Core.Store
 {
-    public static class StateStoreExtensions
+    public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddStateStore(this IServiceCollection services)
         {
             services.AddOptions<StateStoreOptions>()
                 .BindConfiguration("StateStore");
 
-            services.TryAddScoped<DaprClient>();
+            services.AddDaprClient();
             services.TryAddScoped<IStateStore, StateStore>();
 
             return services;
