@@ -1,9 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\LeadGen.Core\LeadGen.Core.csproj" />
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
 	  <Nullable>enable</Nullable>
@@ -17,5 +13,9 @@
 	<ItemGroup>
 	  <PackageReference Include="Dapr.Actors.AspNetCore" Version="1.2.0" />
 	  <PackageReference Include="Dapr.AspNetCore" Version="1.2.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\LeadGen.Core\LeadGen.Core.csproj" />
 	</ItemGroup>
 </Project>

@@ -7,6 +7,8 @@
     </div>
 }
 <EditForm Model="@FormModel" OnSubmit="@OnFormSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
     <label>@nameof(FormModel.FirstName)</label>
     <InputText DisplayName="@nameof(FormModel.FirstName)" @bind-Value="@FormModel.FirstName" class="form-control" />
     <label>@nameof(FormModel.LastName)</label>

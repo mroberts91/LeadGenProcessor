@@ -7,7 +7,7 @@ namespace LeadGen.Core.Store
 {
     public interface IStateStore
     {
-        Task<byte[]?> GetValidateLeadTokenAsync(ValidatedLead validatedLead);
+        Task<byte[]> GetValidateLeadTokenAsync(ValidatedLead validatedLead);
         Task SaveValidatedLeadTokenAsync(ValidatedLead validatedLead);
     }
 }

@@ -1,7 +1,141 @@
 @page "/"
+@page "/dashboard"
+@using System.Text.RegularExpressions
+@using LeadGen.Core.Events.Leads
+@using Radzen.Blazor.Rendering
+@using LeadGen.Reporting.Services
+@using LeadGen.Reporting.Models
+@inject IEventCache EventCache
 
-<h1>Hello, world!</h1>
+<h1>Lead Gen Reporting</h1>
+<p>
+    Sample dashboard hooks into Pub Sub events from our sample microservice cluster using Dapr and Tye
+</p>
+<div class="container-fluid" style="position: relative">
+    <div class="row">
+        <div class="col-12 col-sm-4">
+            <RadzenCard class="lead-card">
+                <h2>Validated Leads</h2>
+                <label class="text-primary">@(validatedLeads?.Count() ?? 0)</label>
+            </RadzenCard>
+        </div>
+        <div class="col-12 col-sm-4">
+            <RadzenCard class="lead-card">
+                <h2>Proccessed Leads</h2>
+                <label class="text-success">@(proccessedLeads?.Count() ?? 0)</label>
+            </RadzenCard>
+        </div>
+        <div class="col-12 col-sm-4">
+             <RadzenCard class="lead-card">
+                <h2>Rejected Leads</h2>
+                <label class="text-danger">@(rejectedLeads?.Count() ?? 0)</label>
+            </RadzenCard>
+        </div>
+        <div class="col-12 col-sm-4">
+             <RadzenCard class="lead-card">
+                <h2>Stats Updated UTC</h2>
+                <label class="text-info">@(reportingStats?.UpdatedUtc.ToString() ?? "Pending")</label>
+            </RadzenCard>
+        </div>
+        <div class="col-12 col-sm-4">
+             <RadzenCard class="lead-card">
+                <h2>Average Validated -> Processed MS</h2>
+                <label class="text-info">@((reportingStats?.AverageTimeToProccessed ?? 0).ToString("N2"))</label>
+            </RadzenCard>
+        </div>
+         <div class="col-12 col-sm-4">
+             <RadzenCard class="lead-card">
+                <h2>Rejection Percentage</h2>
+                <label class="text-info">@((reportingStats?.RejectionPercentage ?? 0.0).ToString("N2"))%</label>
+            </RadzenCard>
+        </div>
+        <!-- <div class="col-12 col-sm-4">
+             <RadzenCard class="lead-card">
+                <h2>Average Validated -> Processed MS</h2>
+                <label class="text-info">@(reportingStats?.AverageTimeToProccessed ?? 0)</label>
+            </RadzenCard>
+        </div>-->
+    </div>
+</div>
 
-Welcome to your new app.
+<style>
+.lead-card {
+    z-index: 1;
+    text-align: center;
+    width: 100%;
+    height: 14em;
+    padding: 1em;
+    margin: 1em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+.lead-card label{
+    font-size: 3em;
+    font-weight: bold;
+}
+
+</style>
+
+@code {
+    IEnumerable<LeadValidated>? validatedLeads;
+    IEnumerable<LeadProccessed>? proccessedLeads;
+    IEnumerable<LeadRejected>? rejectedLeads;
+    IEnumerable<LeadValidated>? filteredValidatedLeads;
+    ReportingStats? reportingStats;
+    double rejectedRatio = 0.0;
+    bool fetchingData = false;
+    string error = null;
+
+
+    void OnCacheUpdated(bool updated)
+    {
+        Task.Run(async () =>
+        {
+            validatedLeads = EventCache.GetCachedEvents<LeadValidated>();
+            rejectedLeads = EventCache.GetCachedEvents<LeadRejected>();
+            proccessedLeads = EventCache.GetCachedEvents<LeadProccessed>();
+            await InvokeAsync(() => StateHasChanged());
+        }).ConfigureAwait(false);
+    }
+
+    void OnStatsUpdated(bool updated)
+    {
+        Task.Run(async () =>
+        {
+            reportingStats = EventCache.GetReportingStats();
+            await InvokeAsync(() => StateHasChanged());
+        }).ConfigureAwait(false);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            EventCache.OnCacheUpdated(OnCacheUpdated);
+            EventCache.OnStatsUpdate(OnStatsUpdated);
+
+            fetchingData = true;
+            try 
+            {
+                validatedLeads = EventCache.GetCachedEvents<LeadValidated>();
+                proccessedLeads = EventCache.GetCachedEvents<LeadProccessed>();
+                rejectedLeads = EventCache.GetCachedEvents<LeadRejected>();
+
+                filteredValidatedLeads = validatedLeads?.OrderByDescending(lead => lead?.Lead?.ValidatedUtc);
+
+                rejectedRatio = (rejectedLeads?.Count() ?? 0) / ((double?)validatedLeads?.Count() ?? 1.0);
+
+                error = null;
+                fetchingData = false;
+            } 
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+
+            await InvokeAsync(() => StateHasChanged());
+        }
+    }
+}

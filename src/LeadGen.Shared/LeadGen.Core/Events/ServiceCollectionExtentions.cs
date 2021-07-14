@@ -10,7 +10,7 @@ namespace LeadGen.Core.Events
         {
             services.AddControllers().AddDapr();
             services.TryAddScoped<DaprClient>();
-            services.TryAddScoped<IEventBus, DaprEventBus>();
+            services.TryAddTransient<IEventBus, DaprEventBus>();
 
             return services;
         }

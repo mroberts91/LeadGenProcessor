@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+	  <TargetFramework>net6.0</TargetFramework>
+	  <Nullable>enable</Nullable>
+	  <LangVersion>preview</LangVersion>
     <UserSecretsId>dotnet-LeadGen.Worker-F180A5BF-AD9F-46EC-9157-47E1D6FC35BE</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoBogus" Version="2.13.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0-preview.4.21253.7" />
+	<PackageReference Include="Dapr.AspNetCore" Version="1.2.0" />
   </ItemGroup>
 </Project>

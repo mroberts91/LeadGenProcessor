@@ -6,8 +6,6 @@ namespace LeadGen.Core.Models
     {
         public static LeadValidationResult CreateFailedResult(string errorMessage) => new(false, null, errorMessage);
         public static LeadValidationResult CreateFailedResult(InvalidLeadPropertyException<string> exception) => new(false, null, exception.Message);
-
         public static LeadValidationResult CreateSuccessResult(ValidatedLead validatedLead) => new(true, validatedLead, null);
-
     }
 }

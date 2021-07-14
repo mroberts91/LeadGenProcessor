@@ -8,6 +8,9 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 using LeadGen.Core.Events;
 using LeadGen.Core.Store;
+using LeadGen.Core.Middleware;
+using System.Text.Json;
+using LeadGen.Core.Models;
 
 namespace LeadGen.Validator
 {
@@ -39,7 +42,12 @@ namespace LeadGen.Validator
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseDeveloperExceptionPage();
+            app.Use(async (context, next) =>
+            {
+                var headers = context.Request.Headers;
+                await next(context);
+            });
+            app.UseServiceExceptionHandler("/");
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "LeadGen.Validator v1"));
 
@@ -51,6 +59,14 @@ namespace LeadGen.Validator
 
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapPost("/validatetest", async context =>
+                {
+                    var foo = await JsonSerializer.DeserializeAsync<Lead>(context.Request.Body);
+                    System.Console.WriteLine();
+                    
+                });
+
+                endpoints.MapControllers();
                 endpoints.MapConfigDebugEndpoint();
 
                 endpoints.MapHealthChecks("/health/ready", new HealthCheckOptions()

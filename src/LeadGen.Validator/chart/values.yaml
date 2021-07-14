@@ -6,10 +6,10 @@ label:
   name: LeadGen.Validator
 
 container:
-  name: aspnet3
+  name: mrober23
   pullPolicy: IfNotPresent
-  image: aspnet3k8s # How do we link the two?
-  tag: v1 # 
+  image: leadgenvalidatorservice
+  tag: latest 
   port: 80
   probeDelay: 30
 

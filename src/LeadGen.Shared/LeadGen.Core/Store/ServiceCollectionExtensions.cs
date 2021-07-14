@@ -14,7 +14,7 @@ namespace LeadGen.Core.Store
                 .BindConfiguration("StateStore");
 
             services.AddDaprClient();
-            services.TryAddScoped<IStateStore, StateStore>();
+            services.TryAddTransient<IStateStore, StateStore>();
 
             return services;
         }

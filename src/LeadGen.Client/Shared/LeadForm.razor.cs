@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using LeadGen.Connectors;
+using Microsoft.Extensions.Configuration;
+using System.ComponentModel.DataAnnotations;
 
 namespace LeadGen.Client.Shared
 {
@@ -11,6 +13,7 @@ namespace LeadGen.Client.Shared
     {
         [Inject] IValidationConnector Validation { get; set; }
         [Inject] NavigationManager NavigationManager { get; set; }
+        [Inject] IConfiguration Configuration { get; set; }
 
         private LeadFormViewModel FormModel { get; set; } = new();
         private bool Error { get; set; }
@@ -25,7 +28,7 @@ namespace LeadGen.Client.Shared
         {
             Error = false;
 
-            var result = await Validation.ValidateLeadAsync(FormModel.FirstName, FormModel.LastName, FormModel.Email, FormModel.Phone);
+            var result = await Validation.ValidateLeadAsync(FormModel.FirstName, FormModel.LastName, FormModel.Email, FormModel.Phone, Configuration.GetValue<string>("AppName"));
             if (result.IsValidated)
                 NavigationManager.NavigateTo("/thank-you");
 
@@ -35,6 +38,7 @@ namespace LeadGen.Client.Shared
 
         public class LeadFormViewModel
         {
+            [Required]
             public string? FirstName { get; set; }
             public string? LastName { get; set; }
             public string? Email { get; set; }

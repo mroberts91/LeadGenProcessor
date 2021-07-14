@@ -23,12 +23,16 @@ namespace LeadGen.Core.Store
 
         public async Task SaveValidatedLeadTokenAsync(ValidatedLead validatedLead)
         {
-            await _daprClient.SaveStateAsync(_storeOptions.TokenStore, validatedLead.ValidationTokenKey, validatedLead.ValidationToken);
+            (byte[] currentState, string eTag) = await _daprClient.GetStateAndETagAsync<byte[]>(_storeOptions.TokenStore, validatedLead.ValidationTokenKey);
+            currentState = validatedLead.ValidationToken;
+            var success = await _daprClient.TrySaveStateAsync(_storeOptions.TokenStore, validatedLead.ValidationTokenKey, currentState, eTag);
+            Console.WriteLine();
         }
 
-        public async Task<byte[]?> GetValidateLeadTokenAsync(ValidatedLead validatedLead)
+        public async Task<byte[]> GetValidateLeadTokenAsync(ValidatedLead validatedLead)
         {
-            return await _daprClient.GetStateAsync<byte[]>(_storeOptions.TokenStore, validatedLead.ValidationTokenKey);
+            var token = await _daprClient.GetStateAsync<byte[]>(_storeOptions.TokenStore, validatedLead.ValidationTokenKey, ConsistencyMode.Strong);
+            return token;
         }
     }
 }

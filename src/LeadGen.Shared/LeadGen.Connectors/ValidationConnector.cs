@@ -20,11 +20,11 @@ namespace LeadGen.Connectors
             _logger = logger;
         }
 
-        public async Task<LeadValidationResult> ValidateLeadAsync(string? firstName, string? lastName, string? email, string? phone)
+        public async Task<LeadValidationResult> ValidateLeadAsync(string? firstName, string? lastName, string? email, string? phone, string? source)
         {
             try
             {
-                Lead lead = Lead.Create(firstName, lastName, email, phone);
+                Lead lead = Lead.Create(firstName, lastName, email, phone, source);
                 LeadValidationResult result = await _daprClient.InvokeMethodAsync<Lead, LeadValidationResult>("leadgen-validator", "Validate", lead);
                 return result;
             }
@@ -35,6 +35,7 @@ namespace LeadGen.Connectors
             }
 
         }
+
         public record LeadValidationResult(bool IsValidated, ValidatedLead? ValidatedLead = null, string? ErrorMessage = null);
     }
 

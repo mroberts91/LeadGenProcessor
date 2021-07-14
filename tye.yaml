@@ -75,15 +75,15 @@ services:
   env_file:
     - ./pubsub.env
     - ./statestore.env
-- name: leadgen-worker
-  project: src/LeadGen.Workers/LeadGen.Worker.csproj
-  replicas: 1
-  env:
-    - name: AppName
-      value: LeadGen-Worker
-  env_file:
-    - ./pubsub.env
-    - ./statestore.env
+# - name: leadgen-worker
+#   project: src/LeadGen.Workers/LeadGen.Worker.csproj
+#   replicas: 1
+#   env:
+#     - name: AppName
+#       value: LeadGen-Workercl
+#   env_file:
+#     - ./pubsub.env
+#     - ./statestore.env
 
 # - name: placement
 #   image: daprio/dapr

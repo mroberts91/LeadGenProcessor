@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LeadGen.Core.Events
@@ -20,11 +21,11 @@ namespace LeadGen.Core.Events
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task PublishAsync<T>(T eventData) where T : EventBase
+        public async Task PublishAsync<T>(T eventData, CancellationToken cancellationToken = default) where T : EventBase
         {
             if (eventData.Subscription is EventSubscription subscription)
             {
-                await _daprClient.PublishEventAsync<object>(subscription.Name, subscription.Topic, eventData);
+                await _daprClient.PublishEventAsync<object>(subscription.Name, subscription.Topic, eventData, cancellationToken);
                 return;
             }
 

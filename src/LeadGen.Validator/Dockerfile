@@ -1,16 +1,37 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
+#FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-env
+#WORKDIR /app
+#
+## Copy csproj and restore as distinct layers
+#COPY *.csproj ./
+#RUN dotnet restore
+#
+## Copy everything else and build
+#COPY . ./
+#RUN dotnet publish -c Release -o out
+#
+## Build runtime image
+#FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+#WORKDIR /app
+#COPY --from=build-env /app/out .
+#ENTRYPOINT ["dotnet", "LeadGen.Validator.dll"]
+
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 WORKDIR /app
+EXPOSE 80
+EXPOSE 443
 
-# Copy csproj and restore as distinct layers
-COPY *.csproj ./
-RUN dotnet restore
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+WORKDIR /src
+COPY ["LeadGen.Validator.csproj", "../LeadGen.Shared/LeadGen.Core/LeadGen.Core.csproj", "."]
+RUN dotnet restore "./LeadGen.Validator.csproj"
+COPY . .
+WORKDIR "/src/."
+RUN dotnet build "LeadGen.Validator.csproj" -c Release -o /app/build
 
-# Copy everything else and build
-COPY . ./
-RUN dotnet publish -c Release -o out
+FROM build AS publish
+RUN dotnet publish "LeadGen.Validator.csproj" -c Release -o /app/publish
 
-# Build runtime image
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+FROM base AS final
 WORKDIR /app
-COPY --from=build-env /app/out .
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "LeadGen.Validator.dll"]
